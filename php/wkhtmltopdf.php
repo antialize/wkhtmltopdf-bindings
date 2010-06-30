@@ -9,7 +9,7 @@
 	/**
 	 * @author Christian Sciberras
 	 * @see <a href="http://code.google.com/p/wkhtmltopdf/">http://code.google.com/p/wkhtmltopdf/</a>
-	 * @copyright 2010 Christian Sciberras / Covac Software.
+	 * @copyright 2010 Christian Sciberras / Keen Advertising / Covac Software.
 	 * @license None. There are no restrictions on use, however keep copyright intact.
 	 *   Modification is allowed, keep track of modifications below in this comment block.
 	 * @example
@@ -26,40 +26,41 @@
 	 *   <font color="#008800"><i>// Output PDF. The file name is suggested to the browser.</i></font><br>
 	 *   <font color="#EE00EE">$pdf</font>-><font color="#0000FF">output</font>(<b>WKPDF</b>::<font color="#EE00EE">$PDF_EMBEDDED</font>,<font color="#FF0000">'sample.pdf'</font>);<br>
 	 * @version
-	 *   0.0 Chris - Created class.<br>
-	 *   0.1 Chris - Variable paths fixes.<br>
-	 *   0.2 Chris - Better error handlng (via exceptions).<br>
+	 *   0.5 Pat Brooks - Identifying certain return error codes.
+	 *   0.4 Adam, Pierino, Chris - Protected fields, IP instead domain, pages from multiple sources.<br>
 	 *   0.3 Chris - CPU and CPU vendor detection to suggest proper executable.<br>
+	 *   0.2 Chris - Better error handlng (via exceptions).<br>
+	 *   0.1 Chris - Variable paths fixes.<br>
+	 *   0.0 Chris - Created class.<br>
 	 * <font color="#FF0000"><b>IMPORTANT: Make sure that there is a folder in %LIBRARY_PATH%/tmp that is writable!</b></font>
 	 * <br><br>
 	 * <b>Features/Bugs/Contact</b><br>
 	 * Found a bug? Want a modification? Contact me at <a href="mailto:uuf6429@gmail.com">uuf6429@gmail.com</a> or <a href="mailto:contact@covac-software.com">contact@covac-software.com</a>...
-	 *   guaranteed to get a reply within 2 hours at most (daytime GMT+1).
 	 */
 	class WKPDF {
 		/**
-		 * Private use variables.
+		 * protected use variables.
 		 */
-		private $cmd='';
-		private $tmp='';
-		private $pdf='';
-		private $status='';
-		private $orient='Portrait';
-		private $size='A4';
-		private $toc=false;
-		private $copies=1;
-		private $grayscale=false;
-		private $title='';
-		private static $_cpu='';
-		private static $_os='';
-		private static $_cmd='';
+		protected $cmd='';
+		protected $tmp='';
+		protected $pdf='';
+		protected $status='';
+		protected $orient='Portrait';
+		protected $size='A4';
+		protected $toc=false;
+		protected $copies=1;
+		protected $grayscale=false;
+		protected $title='';
+		protected static $_cpu='';
+		protected static $_os='';
+		protected static $_cmd='';
 		/**
 		 * Advanced execution routine.
 		 * @param string $cmd The command to execute.
 		 * @param string $input Any input not in arguments.
 		 * @return array An array of execution data; stdout, stderr and return "error" code.
 		 */
-		private static function _pipeExec($cmd,$input=''){
+		protected static function _pipeExec($cmd,$input=''){
 			$proc=proc_open($cmd,array(0=>array('pipe','r'),1=>array('pipe','w'),2=>array('pipe','w')),$pipes);
 			fwrite($pipes[0],$input);
 			fclose($pipes[0]);
@@ -71,14 +72,14 @@
 			return array(
 					'stdout'=>$stdout,
 					'stderr'=>$stderr,
-					'return'=>$rtn
+					'return'=>(int)$rtn
 				);
 		}
 		/**
 		 * Function that attempts to return the kind of platform.
 		 * @return string OS kind ('win', 'lin' or 'osx').
 		 */
-		private static function _getOS(){
+		protected static function _getOS(){
 			if(self::$_os==''){
 				if(stristr(PHP_OS,'WIN') && !stristr(PHP_OS,'DAR'))	self::$_os='win';
 				elseif(`uname | grep -i linux`!='')					self::$_os='lin';
@@ -91,14 +92,16 @@
 		 * Function that attempts to return the kind of CPU.
 		 * @return string CPU kind ('amd', 'intel' or 'ppc').
 		 */
-		private static function _getCPU(){
+		protected static function _getCPU(){
 			if(self::$_cpu==''){
 				switch(self::_getOS()){
 					case 'lin':
+// TODO: use uname -m or -a, by the way, this is about 32bit vs 64bit not amd vs intel!
 						if(`grep -i amd /proc/cpuinfo`!='')			self::$_cpu='amd';
 						elseif(`grep -i intel /proc/cpuinfo`!='')	self::$_cpu='intel';
-						break;
+						self::$_cpu='amd';break;
 					case 'osx':
+// TODO: use uname -m or -a
 						if(`machine | grep -i ppc`!='')				self::$_cpu='ppc';
 						// TODO: I don't like this check on a single character
 						elseif(`machine | grep -i i`!='')			self::$_cpu='intel';
@@ -118,7 +121,7 @@
 		 * Function that attempts to return the correct executable path.
 		 * @return string WKHTMLTOPDF path.
 		 */
-		private static function _getCMD(){
+		protected static function _getCMD(){
 			if(self::$_cmd==''){
 				// the end filename is in the form of "(%PATH%)wkhtmltopdf[-(win|osx|lin)-(amd|intel|ppc)][.exe]"
 				if(self::_getOS()=='win'){
@@ -127,6 +130,21 @@
 				}else{
 					self::$_cmd=$GLOBALS['WKPDF_BASE_PATH'].'wkhtmltopdf-'.self::_getOS().'-'.self::_getCPU();
 				}
+			}
+			switch(self::_getOS()){
+				case 'win': // checks file existence (permissions on windows isn't much of a problem)
+					// for windows, the command is "exists %filename%" ... try it out?
+					break;
+				case 'lin': case 'osx': // checks file existence and permissions using LS
+					$exists=self::_pipeExec('test -f "'.self::$_cmd.'"');
+					if($exists['return']>0)
+						throw new Exception('WKPDF executable couldn\'t be found ("'.htmlspecialchars(self::$_cmd).'").');
+					$exists=explode(' ',str_replace('  ',' ',str_replace('	',' ',$exists['stdout']))); // perms, unused, group, user, ...
+					if(count($exists)>1) // "test" command ran, keep testing settings, otherwise just ignore tests...
+						if(strstr($exists[0],'rwxrwxrwx')===false)
+							if(($exists[2]!=get_current_user())||($exists[3]!=get_current_user()))
+								throw new Exception('WKPDF executable permissions are not 0777 and user/group does not match with current user.');
+					break;
 			}
 			return self::$_cmd;
 		}
@@ -254,7 +272,7 @@
 		 * @param string $msg The error message.
 		 * @param array $out The output.
 		 */
-		private static function _retError($msg,$out){
+		protected static function _retError($msg,$out){
 			throw new Exception($msg.'<table>'
 				.'<tr><td>RESULT:</td><td><code>'.htmlspecialchars($out['return'],ENT_QUOTES).'</code></td></tr>'
 				.'<tr><td>STDERR:</td><td><code>'.htmlspecialchars($out['stderr'],ENT_QUOTES).'</code></td></tr>'
@@ -263,24 +281,40 @@
 		}
 		/**
 		 * Convert HTML to PDF.
+		 * @return boolean Whether successful or not.
 		 */
 		public function render(){
 			$this->pdf=self::_pipeExec(
 				$this->cmd
-				.(($this->copies>1)?' --copies '.$this->copies:'')				// number of copies
-				.' --orientation '.$this->orient								// orientation
-				.' --page-size '.$this->size									// page size
-				.($this->toc?' --toc':'')										// table of contents
-				.($this->grayscale?' --grayscale':'')							// grayscale
-				.(($this->title!='')?' --title "'.$this->title.'"':'')			// title
-				.' "'.$this->url.'" -'											// URL and use STDOUT
+				.(($this->copies>1)?' --copies '.(int)$this->copies:'')				// number of copies
+				.' --orientation '.escapeshellarg($this->orient)					// orientation
+				.' --page-size '.escapeshellarg($this->size)						// page size
+				.($this->toc?' --toc':'')											// table of contents
+				.($this->grayscale?' --grayscale':'')								// grayscale
+				.(($this->title!='')?' --title '.escapeshellarg($this->title):'')	// title
+				.' '.escapeshellarg($this->url).' -'								// URL and use STDOUT
 			);
 			if(strpos(strtolower($this->pdf['stderr']),'error')!==false)self::_retError('WKPDF system error.',$this->pdf);
 			if($this->pdf['stdout']=='')self::_retError('WKPDF program error.',$this->pdf);
-			if(((int)$this->pdf['return'])>1)self::_retError('WKPDF shell error.',$this->pdf);
 			$this->status=$this->pdf['stderr'];
 			$this->pdf=$this->pdf['stdout'];
 			if($this->tmp!='')unlink($this->tmp);
+			switch($this->pdf['return']){
+				case 7:
+					self::_retError('WKPDF system error 7: malformed executable.',$this->pdf);
+					return false;
+				case 3:
+					self::_retError('WKPDF error 401: unauthorized.',$this->pdf);
+					return false;
+				case 2:
+					self::_retError('WKPDF error 404: file not found.',$this->pdf);
+					return false;
+				case 0:
+					return true;
+				default:
+					self::_retError('WKPDF error '.$this->pdf['return'].'.',$this->pdf);
+					return false;
+			}
 		}
 		/**
 		 * Return PDF with various options.
@@ -335,6 +369,85 @@
 					throw new Exception('WKPDF invalid mode "'.htmlspecialchars($mode,ENT_QUOTES).'".');
 			}
 			return false;
+		}
+	}
+
+	/**
+	 * This class, which extends WKPDF is for generating a PDF with multiple pages without using CSS page-break.
+	 */
+	class WKPDF_MULTI extends WKPDF {
+		/**
+		 * An array of HTML files, this is used internally.
+		 * @var array Array of URLs to files.
+		 */
+		private $html_files=array();
+		/**
+		 * An array of URLs.
+		 * @var array Array of URLs to pages.
+		 */
+		private $html_urls=array();
+		/**
+		 * This function doesn't make sense in this context.
+		 */
+		public function set_html(){
+			die('Calling set_html() not allowed for WKPDF_MULTI class.');
+		}
+		/**
+		 * This function doesn't make sense in this context.
+		 */
+		public function set_url(){
+			die('Calling set_url() not allowed for WKPDF_MULTI class.');
+		}
+		/**
+		 * Add a new HTML page.
+		 * @param string $html Content of HTML page.
+		 */
+		public function add_html($html){
+			do{
+				$file=$GLOBALS['WKPDF_BASE_PATH'].'tmp/'.mt_rand().'.html';
+			} while(file_exists($file));
+			if(!file_put_contents($file,$html))throw new Exception('WKPDF write temporary file failed.');
+			$this->html_urls[]=$GLOBALS['WKPDF_BASE_SITE'].$GLOBALS['WKPDF_BASE_PATH'].'tmp/'.basename($file);
+			$this->html_files[]=$file;
+		}
+		/**
+		 * Add a new page from URL.
+		 * @param string $html URL to HTML page.
+		 */
+		public function add_url($url){
+			$this->html_urls[]=$url;
+		}
+		/**
+		 * Cleans TMP folder from used files.
+		 */
+		protected function clean_tmp(){
+			foreach($this->html_files as $file)unlink($file);
+		}
+		/**
+		 * Convert HTML pages to PDF.
+		 */
+		public function render(){
+			$urls='"'.implode('" "',$this->html_urls).'"';
+			if($urls=='""'){
+				$this->add_html('<html><body><!--EMPTY PDF--></body></html>');
+				$urls='"'.implode('" "',$this->html_urls).'"';
+			}
+			$this->pdf=self::_pipeExec(
+				$this->cmd
+				.(($this->copies>1)?' --copies '.$this->copies:'')				// number of copies
+				.' --orientation '.$this->orient								// orientation
+				.' --page-size '.$this->size									// page size
+				.($this->toc?' --toc':'')										// table of contents
+				.($this->grayscale?' --grayscale':'')							// grayscale
+				.(($this->title!='')?' --title "'.$this->title.'"':'')			// title
+				.' '.$urls.' -'													// URL and use STDOUT
+			);
+			if(strpos(strtolower($this->pdf['stderr']),'error')!==false)self::_retError('WKPDF system error.',$this->pdf);
+			if($this->pdf['stdout']=='')self::_retError('WKPDF program error.',$this->pdf);
+			if(((int)$this->pdf['return'])>1)self::_retError('WKPDF shell error.',$this->pdf);
+			$this->status=$this->pdf['stderr'];
+			$this->pdf=$this->pdf['stdout'];
+			$this->clean_tmp();
 		}
 	}
 ?>
