@@ -109,7 +109,7 @@ BOOL _stdcall pdf_convert(void * converter) {
 }
 
 void * _stdcall pdf_addResource(void * converter, void * settings, const char * data) {
-  //return wkhhtmltopdf_add_resource(converter, settings, data);
+  return wkhhtmltopdf_add_resource(converter, settings, data);
 }
 
 int _stdcall pdf_currentPhase(void * converter) {
