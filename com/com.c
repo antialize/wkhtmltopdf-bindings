@@ -5,7 +5,6 @@
 
 static HMODULE module = NULL ; 
 
-
 /**************************************> Class Factory Base <************************************/
 typedef struct CWkHtmlToXFactory {
   IClassFactory cf;
@@ -61,6 +60,7 @@ ULONG _stdcall pdf_release(struct IWkHtmlToPdf * s) {
   --self->ref;
   if (self->ref > 0) return self->ref;
   free(self);
+  wkhtmltopdf_deinit();
   return 0;
 }
 
@@ -163,6 +163,7 @@ HRESULT _stdcall pdf_factory_createInstance(IClassFactory * f, IUnknown * o, con
   p->parent.vtbl = &pdf_vtbl;
   p->ref = 1;
   *v = p;
+  wkhtmltopdf_init(1);
   return S_OK;
 }
 
