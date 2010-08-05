@@ -1,0 +1,5 @@
+LIBRARY wkhtmltoxcom
+EXPORTS
+	DllRegisterServer
+	DllUnregisterServer
+	DllGetClassObject
