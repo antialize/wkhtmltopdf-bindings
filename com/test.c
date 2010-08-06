@@ -1,4 +1,5 @@
 #include "wkhtmltoxcom.h"
+#include "guid.h"
 #include <stdio.h>
 
 int main() {
@@ -6,31 +7,34 @@ int main() {
   IWkHtmlToPdfVtbl * v;
   HRESULT h;
   char buff[1234];
-  void * gs, * conv, * o;
-  
+  int gs, conv, o;
+  const char * version;
+  BOOL ext;
+
   CoInitialize(NULL);
   
-  h = CoCreateInstance( &CWkHtmlToPdf_CLSID,
+  h = CoCreateInstance( &CLSID_CWkHtmlToPdf,
 			NULL, 
 			CLSCTX_INPROC_SERVER, 
 			&IID_IWkHtmlToPdf,
 			&i); 
-  v = i->vtbl;
+  v = i->lpVtbl;
+  
+  v->version(i, &version);
+  v->extendedQt(i, &ext);
   printf("Converting document using wkhtmltopdf version %s, %susing extended QT\n",
-	 v->version(),
-	 v->extendedQt()?"":"*not* "
-	 );
+	 version, ext?"":"*not* ");
+
+  v->createGlobalSettings(i, &gs);
+  v->setGlobalSetting(i, gs, "out", "foo.pdf");
   
-  gs = v->createGlobalSettings();
-  v->setGlobalSetting(gs, "out", "foo.pdf");
+  v->createConverter(i, gs, &conv);
   
-  conv = v->createConverter(gs);
+  v->createObjectSettings(i, &o);
+  v->setObjectSetting(i, o, "page", "newz.dk");
   
-  o = v->createObjectSettings();
-  v->setObjectSetting(o, "page", "newz.dk");
+  v->addResource(i, conv, o, NULL);
+  v->convert(i, conv);
   
-  v->addResource(conv, o, NULL);
-  v->convert(conv);
-  
-  v->release(i);
+  v->Release(i);
 }
