@@ -1,0 +1,129 @@
+// wkhtmltoxcom.idl : IDL source for wkhtmltoxcom
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (wkhtmltoxcom.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(a817e7a2-43fa-11d0-9e44-00aa00b6770a),
+	dual,
+	helpstring("IComponentRegistrar Interface"),
+	pointer_default(unique)
+]
+interface IComponentRegistrar : IDispatch
+{
+	[id(1)]	HRESULT Attach([in] BSTR bstrPath);
+	[id(2)]	HRESULT RegisterAll();
+	[id(3)]	HRESULT UnregisterAll();
+	[id(4)]	HRESULT GetComponents([out] SAFEARRAY(BSTR)* pbstrCLSIDs, [out] SAFEARRAY(BSTR)* pbstrDescriptions);
+	[id(5)]	HRESULT RegisterComponent([in] BSTR bstrCLSID);
+	[id(6)] HRESULT UnregisterComponent([in] BSTR bstrCLSID);
+};
+
+[
+	object,
+	uuid(AF9B8D22-6773-43AD-8EC5-74962D16FE2E),
+	helpstring("interface for wkhtmltox call back")
+]
+interface IWkHtmlToXCallBack: IUnknown {
+	HRESULT warning([in] ULONG converter, [in] BSTR message);
+	HRESULT error([in] ULONG converter, [in] BSTR message);
+	HRESULT phaseChanged([in] ULONG converter);
+	HRESULT progressChanged([in] ULONG converter, [in] ULONG progress );
+	HRESULT finished([in] ULONG converter, [in] BOOL ok);
+};
+
+[
+	object,
+	uuid(DF4EF884-7B4F-445C-B012-02BB8B27589C),
+	dual,
+	nonextensible,
+	helpstring("IWkHtmlToPdf Interface"),
+	pointer_default(unique)
+]
+interface IWkHtmlToPdf : IDispatch{
+	[id(1), helpstring("method extendedQt")] HRESULT extendedQt([out,retval] BOOL * ext);
+	[id(2), helpstring("method getVersion")] HRESULT getVersion([out,retval] BSTR * ret);
+	[id(3), helpstring("method createGlobalSettings")] HRESULT createGlobalSettings([out,retval] ULONG * gs);
+	[id(4), helpstring("method createObjectSettings")] HRESULT createObjectSettings([out,retval] ULONG * os);
+	[id(5), helpstring("method setGlobalSetting")] HRESULT setGlobalSetting([in] ULONG gs, [in] BSTR name, [in] BSTR value, [out,retval] BOOL * ok);
+	[id(6), helpstring("method getGlobalSetting")] HRESULT getGlobalSetting([in] ULONG gs, [in] BSTR name, [out,retval] BSTR * value);
+	[id(7), helpstring("method setObjectSetting")] HRESULT setObjectSetting([in] ULONG os, [in] BSTR name, [in] BSTR value, [out,retval] BOOL * ok);
+	[id(8), helpstring("method getObjectSetting")] HRESULT getObjectSetting([in] ULONG os, [in] BSTR name, [out,retval] BSTR * value);
+	[id(9), helpstring("method createConverter")] HRESULT createConverter([in] ULONG gs, [out,retval] ULONG * con);
+	[id(10), helpstring("method destroyConverter")] HRESULT destroyConverter([in] ULONG cov);
+	[id(11), helpstring("method convert")] HRESULT convert([in] ULONG con, [out,retval] ULONG * ok);
+	[id(12), helpstring("method addResource")] HRESULT addResource([in] ULONG con, [in] ULONG os, [in] BSTR data);
+	[id(13), helpstring("method currentPhase")] HRESULT currentPhase([in] ULONG con, [out,retval] ULONG * res);
+	[id(14), helpstring("method phaseCount")] HRESULT phaseCount([in] ULONG con, [out,retval] ULONG * res);
+	[id(15), helpstring("method phaseDescription")] HRESULT phaseDescription([in] ULONG con, [in] ULONG phase, [out,retval] BSTR * res);
+	[id(16), helpstring("method progressString")] HRESULT progressString([in] ULONG con, [out,retval] BSTR * res);
+	[id(17), helpstring("method httpErrorCode")] HRESULT httpErrorCode([in] ULONG con, [out,retval] ULONG * res);
+	[id(18), helpstring("method getOutput")] HRESULT getOutput([in] ULONG con, [out,retval] SAFEARRAY(BYTE) * res);
+	[id(19), helpstring("method setCallBack")] HRESULT setCallBack([in] IWkHtmlToXCallBack * cb);
+};
+
+[
+	object,
+	uuid(39CD3CEE-D85C-492B-AC88-7C00A7F75A60),
+	dual,
+	nonextensible,
+	helpstring("IWkHtmlToImage Interface"),
+	pointer_default(unique)
+]
+interface IWkHtmlToImage : IDispatch{
+	[id(1), helpstring("method extendedQt")] HRESULT extendedQt([out,retval] BOOL * ext);
+	[id(2), helpstring("method getVersion")] HRESULT getVersion([out,retval] BSTR * ret);
+	[id(3), helpstring("method createGlobalSettings")] HRESULT createGlobalSettings([out,retval] ULONG * gs);
+	[id(4), helpstring("method setGlobalSetting")] HRESULT setGlobalSetting([in] ULONG gs, [in] BSTR name, [in] BSTR value, [out,retval] BOOL * ok);
+	[id(5), helpstring("method getGlobalSetting")] HRESULT getGlobalSetting([in] ULONG gs, [in] BSTR name, [out,retval] BSTR * value);
+	[id(6), helpstring("method createConverter")] HRESULT createConverter([in] ULONG gs, [in] BSTR data, [out,retval] ULONG * con);
+	[id(7), helpstring("method destroyConverter")] HRESULT destroyConverter([in] ULONG cov);
+	[id(8), helpstring("method convert")] HRESULT convert([in] ULONG con, [out,retval] ULONG * ok);
+	[id(10), helpstring("method currentPhase")] HRESULT currentPhase([in] ULONG con, [out,retval] ULONG * res);
+	[id(11), helpstring("method phaseCount")] HRESULT phaseCount([in] ULONG con, [out,retval] ULONG * res);
+	[id(12), helpstring("method phaseDescription")] HRESULT phaseDescription([in] ULONG con, [in] ULONG phase, [out,retval] BSTR * res);
+	[id(13), helpstring("method progressString")] HRESULT progressString([in] ULONG con, [out,retval] BSTR * res);
+	[id(14), helpstring("method httpErrorCode")] HRESULT httpErrorCode([in] ULONG con, [out,retval] ULONG * res);
+	[id(15), helpstring("method getOutput")] HRESULT getOutput([in] ULONG con, [out,retval] SAFEARRAY(BYTE) * res);
+	[id(16), helpstring("method setCallBack")] HRESULT setCallBack([in] IWkHtmlToXCallBack * cb);
+};
+[
+	uuid(8CD61B55-9E0A-4D71-80D4-438B2E9D5A45),
+	version(1.0),
+	helpstring("wkhtmltoxcom 1.0 Type Library"),
+	custom(a817e7a1-43fa-11d0-9e44-00aa00b6770a,"{5D704535-1CCC-4936-A9A5-9B9013998107}")
+]
+library wkhtmltoxcomLib
+{
+	importlib("stdole2.tlb");
+
+	[
+		uuid(5D704535-1CCC-4936-A9A5-9B9013998107),
+		helpstring("ComponentRegistrar Class")
+	]
+	coclass CompReg
+	{
+		[default] interface IComponentRegistrar;
+	};
+	[
+		uuid(C156B9C6-7E0E-4FD7-B510-F6131F3A4A62),
+		helpstring("WkHtmlToPdf Class")
+	]
+	coclass WkHtmlToPdf
+	{
+		[default] interface IWkHtmlToPdf;
+	};
+	[
+		uuid(6F7A8025-AA5C-4B53-A764-B60CD93FA4CC),
+		helpstring("WkHtmlToImage Class")
+	]
+	coclass WkHtmlToImage
+	{
+		[default] interface IWkHtmlToImage;
+	};
+};

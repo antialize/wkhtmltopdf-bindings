@@ -1,0 +1,22 @@
+HKCR
+{
+	NoRemove AppID
+	{
+		'%APPID%' = s 'wkhtmltoxcom'
+		'wkhtmltoxcom.DLL'
+		{
+			val AppID = s '%APPID%'
+		}
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {5D704535-1CCC-4936-A9A5-9B9013998107} = s 'CompReg Class'
+		{
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			'TypeLib' = s '{8CD61B55-9E0A-4D71-80D4-438B2E9D5A45}'
+		}
+	}
+}

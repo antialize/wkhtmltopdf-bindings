@@ -1,0 +1,27 @@
+HKCR
+{
+	wkhtmltoxcom.WkHtmlToPdf.1 = s 'WkHtmlToPdf Class'
+	{
+		CLSID = s '{C156B9C6-7E0E-4FD7-B510-F6131F3A4A62}'
+	}
+	wkhtmltoxcom.WkHtmlToPdf = s 'WkHtmlToPdf Class'
+	{
+		CLSID = s '{C156B9C6-7E0E-4FD7-B510-F6131F3A4A62}'
+		CurVer = s 'wkhtmltoxcom.WkHtmlToPdf.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {C156B9C6-7E0E-4FD7-B510-F6131F3A4A62} = s 'WkHtmlToPdf Class'
+		{
+			ProgID = s 'wkhtmltoxcom.WkHtmlToPdf.1'
+			VersionIndependentProgID = s 'wkhtmltoxcom.WkHtmlToPdf'
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Both'
+			}
+			val AppID = s '%APPID%'
+			'TypeLib' = s '{8CD61B55-9E0A-4D71-80D4-438B2E9D5A45}'
+		}
+	}
+}
