@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Sun Aug 08 11:54:33 2010
+/* at Wed Aug 11 00:44:44 2010
  */
 /* Compiler settings for .\wkhtmltoxcom.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -470,7 +470,7 @@ EXTERN_C const IID IID_IWkHtmlToPdf;
             /* [in] */ ULONG con,
             /* [retval][out] */ ULONG *ok) = 0;
         
-        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE addResource( 
+        virtual /* [helpstring][id] */ HRESULT STDMETHODCALLTYPE addObject( 
             /* [in] */ ULONG con,
             /* [in] */ ULONG os,
             /* [in] */ BSTR data) = 0;
@@ -608,7 +608,7 @@ EXTERN_C const IID IID_IWkHtmlToPdf;
             /* [in] */ ULONG con,
             /* [retval][out] */ ULONG *ok);
         
-        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *addResource )( 
+        /* [helpstring][id] */ HRESULT ( STDMETHODCALLTYPE *addObject )( 
             IWkHtmlToPdf * This,
             /* [in] */ ULONG con,
             /* [in] */ ULONG os,
@@ -718,8 +718,8 @@ EXTERN_C const IID IID_IWkHtmlToPdf;
 #define IWkHtmlToPdf_convert(This,con,ok)	\
     ( (This)->lpVtbl -> convert(This,con,ok) ) 
 
-#define IWkHtmlToPdf_addResource(This,con,os,data)	\
-    ( (This)->lpVtbl -> addResource(This,con,os,data) ) 
+#define IWkHtmlToPdf_addObject(This,con,os,data)	\
+    ( (This)->lpVtbl -> addObject(This,con,os,data) ) 
 
 #define IWkHtmlToPdf_currentPhase(This,con,res)	\
     ( (This)->lpVtbl -> currentPhase(This,con,res) ) 

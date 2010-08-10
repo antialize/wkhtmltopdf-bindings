@@ -78,7 +78,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="comsvcs.lib libwkhtmltox.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="C:\dev\wkhtmltopdf\bin"
+				AdditionalLibraryDirectories="C:\dev\wkhtmltopdf-static\bin"
 				ModuleDefinitionFile=".\wkhtmltoxcom.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

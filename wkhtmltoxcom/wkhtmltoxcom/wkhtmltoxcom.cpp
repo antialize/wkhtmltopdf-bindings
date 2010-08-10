@@ -48,6 +48,23 @@ STDAPI DllRegisterServer(void)
 	return hr;
 }
 
+STDAPI DllRegisterServerLocal(void)
+{
+    // registers object, typelib and all interfaces in typelib
+	AtlSetPerUserRegistration(true);
+    HRESULT hr = _AtlModule.DllRegisterServer();
+	return hr;
+}
+
+
+STDAPI DllUnregisterServerLocal(void)
+{
+    // registers object, typelib and all interfaces in typelib
+	AtlSetPerUserRegistration(true);
+    HRESULT hr = _AtlModule.DllUnregisterServer();
+	return hr;
+}
+
 
 // DllUnregisterServer - Removes entries from the system registry
 STDAPI DllUnregisterServer(void)

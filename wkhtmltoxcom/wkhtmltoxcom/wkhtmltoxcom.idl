@@ -57,7 +57,7 @@ interface IWkHtmlToPdf : IDispatch{
 	[id(9), helpstring("method createConverter")] HRESULT createConverter([in] ULONG gs, [out,retval] ULONG * con);
 	[id(10), helpstring("method destroyConverter")] HRESULT destroyConverter([in] ULONG cov);
 	[id(11), helpstring("method convert")] HRESULT convert([in] ULONG con, [out,retval] ULONG * ok);
-	[id(12), helpstring("method addResource")] HRESULT addResource([in] ULONG con, [in] ULONG os, [in] BSTR data);
+	[id(12), helpstring("method addObject")] HRESULT addObject([in] ULONG con, [in] ULONG os, [in] BSTR data);
 	[id(13), helpstring("method currentPhase")] HRESULT currentPhase([in] ULONG con, [out,retval] ULONG * res);
 	[id(14), helpstring("method phaseCount")] HRESULT phaseCount([in] ULONG con, [out,retval] ULONG * res);
 	[id(15), helpstring("method phaseDescription")] HRESULT phaseDescription([in] ULONG con, [in] ULONG phase, [out,retval] BSTR * res);

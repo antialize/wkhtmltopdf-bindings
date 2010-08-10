@@ -52,7 +52,7 @@ public:
 	STDMETHOD(createConverter)(ULONG gs, ULONG * con);
 	STDMETHOD(destroyConverter)(ULONG cov);
 	STDMETHOD(convert)(ULONG con, ULONG * ok);
-	STDMETHOD(addResource)(ULONG con, ULONG os, BSTR data);
+	STDMETHOD(addObject)(ULONG con, ULONG os, BSTR data);
 	STDMETHOD(currentPhase)(ULONG con, ULONG * res);
 	STDMETHOD(phaseCount)(ULONG con, ULONG * res);
 	STDMETHOD(phaseDescription)(ULONG con, ULONG phase, BSTR * res);

@@ -12,7 +12,6 @@ ObjMan<wkhtmltopdf_global_settings> gsm;
 ObjMan<wkhtmltopdf_object_settings> osm;
 ObjMan2<wkhtmltopdf_converter, CWkHtmlToPdf> csm;
 
-
 void warning(wkhtmltopdf_converter * con, const char * msg) {
   int obj = csm.rev[con];
   CWkHtmlToPdf * c = csm.get2(obj);
@@ -144,7 +143,7 @@ STDMETHODIMP CWkHtmlToPdf::convert(ULONG con, ULONG * ok) {
 	return S_OK;
 }
 
-STDMETHODIMP CWkHtmlToPdf::addResource(ULONG con, ULONG os, BSTR data) {
+STDMETHODIMP CWkHtmlToPdf::addObject(ULONG con, ULONG os, BSTR data) {
 	wkhtmltopdf_converter * c = csm.get(con);
 	if (c == NULL) return ERROR_INVALID_HANDLE;
   
@@ -152,7 +151,7 @@ STDMETHODIMP CWkHtmlToPdf::addResource(ULONG con, ULONG os, BSTR data) {
 	if (o == NULL) return ERROR_INVALID_HANDLE;
   
 	char * d = data?bstr_to_utf8(data):0;
-	wkhtmltopdf_add_resource(c, o, d);
+	wkhtmltopdf_add_object(c, o, d);
 	if (d) delete[] d;
 	osm.unset(os);
 	return S_OK;
@@ -195,7 +194,9 @@ STDMETHODIMP CWkHtmlToPdf::httpErrorCode(ULONG con, ULONG * res) {
 
 STDMETHODIMP CWkHtmlToPdf::getOutput(ULONG con, SAFEARRAY ** res) {
 	const char unsigned * data;
-	long len = wkhtmltopdf_get_output(NULL, &data);
+	wkhtmltopdf_converter * c = csm.get(con);
+	if (c == NULL) return ERROR_INVALID_HANDLE;	
+	long len = wkhtmltopdf_get_output(c, &data);
 	*res = SafeArrayCreateVector(VT_UI1, 0, len);
 	SafeArrayLock(*res);
 	for (long i=0; i < len; ++i)

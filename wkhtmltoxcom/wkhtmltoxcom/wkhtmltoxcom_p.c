@@ -4,7 +4,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Sun Aug 08 11:54:33 2010
+/* at Wed Aug 11 00:44:44 2010
  */
 /* Compiler settings for .\wkhtmltoxcom.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
@@ -931,7 +931,7 @@ static const wkhtmltoxcom_MIDL_PROC_FORMAT_STRING wkhtmltoxcom__MIDL_ProcFormatS
 /* 880 */	0x8,		/* FC_LONG */
 			0x0,		/* 0 */
 
-	/* Procedure addResource */
+	/* Procedure addObject */
 
 /* 882 */	0x33,		/* FC_AUTO_HANDLE */
 			0x6c,		/* Old Flags:  object, Oi2 */
@@ -2672,7 +2672,7 @@ CINTERFACE_PROXY_VTABLE(26) _IWkHtmlToPdfProxyVtbl =
     (void *) (INT_PTR) -1 /* IWkHtmlToPdf::createConverter */ ,
     (void *) (INT_PTR) -1 /* IWkHtmlToPdf::destroyConverter */ ,
     (void *) (INT_PTR) -1 /* IWkHtmlToPdf::convert */ ,
-    (void *) (INT_PTR) -1 /* IWkHtmlToPdf::addResource */ ,
+    (void *) (INT_PTR) -1 /* IWkHtmlToPdf::addObject */ ,
     (void *) (INT_PTR) -1 /* IWkHtmlToPdf::currentPhase */ ,
     (void *) (INT_PTR) -1 /* IWkHtmlToPdf::phaseCount */ ,
     (void *) (INT_PTR) -1 /* IWkHtmlToPdf::phaseDescription */ ,

@@ -6,7 +6,7 @@
 
 
  /* File created by MIDL compiler version 7.00.0500 */
-/* at Sun Aug 08 11:54:33 2010
+/* at Wed Aug 11 00:44:44 2010
  */
 /* Compiler settings for .\wkhtmltoxcom.idl:
     Oicf, W1, Zp8, env=Win32 (32b run)
