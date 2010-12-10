@@ -27,10 +27,19 @@ require_once('wkhtmltopdf.php');
 
 class WKPDF_DBG extends WKPDF { // debugger class extends WKPDF class to gain access to protected methods
 	/**
+	 * @return string Returns the kind of OS (win,lin,osx).
+	 */
+	public static function os(){
+		return self::_getOS();
+	}
+	/**
 	 * @var array This array holds md5 hashes of known executable versions. This is to detect the file version, NOT a security measure!!
 	 */
 	protected static $versions=array(
 		'hash'                             => 'version',
+		'fa6553e6db1b4e5f139a4a227305868c' => '0.10.0 rc1',
+		'af2e951fd859233d3c749ae2f62d1857' => '0.10.0 rc1',
+		'2870d5c819196f5fe6cccfe9c621a0b7' => '0.10.0 rc1',
 		'43aa77d943a6b3053422aea8a4b0f75a' => '0.10.0 beta4 64bit',
 		'1f47dce2755ee7d5f8f9ba20f8ad5b3d' => '0.10.0 beta4 32bit',
 		'cd8c2d843aa2527a27ea20c7fd011051' => '0.10.0 beta3 64bit',
@@ -89,6 +98,7 @@ class WKPDF_DBG extends WKPDF { // debugger class extends WKPDF class to gain ac
 	 * @return string|null If recognized, the version is returned as a string, otherwise null is returned.
 	 */
 	protected static function detect(){
+		if(!file_exists(self::_getCMD()))return false;
 		$hash=md5_file(self::_getCMD());
 		return isset(self::$versions[$hash]) ? self::$versions[$hash] : null;
 	}
@@ -97,15 +107,25 @@ class WKPDF_DBG extends WKPDF { // debugger class extends WKPDF class to gain ac
 	public static function test(){
 		$pev=self::detect();
 		$exe=is_executable(self::_getCMD());
+		$fex=file_exists(self::_getCMD());
+		$ecd='';
+		switch(WKPDF_DBG::os()){
+			case 'win': $ecd=self::_pipeExec('CD');  break;
+			case 'lin': $ecd=self::_pipeExec('PWD'); break;
+			case 'osx': $ecd=self::_pipeExec('PWD'); break;
+		}
+		if(is_array($ecd))$ecd=$ecd['stdout'];
 		self::section_begin('System Info &amp; Settings');
 		self::section_inspect('Detected OS:',self::_getOS(),self::_getOS()!='' ? self::CL_GREEN : self::CL_RED);
 		self::section_inspect('Detected CPU:',self::_getCPU(),self::_getCPU()!='' ? self::CL_GREEN : self::CL_RED);
 		self::section_inspect('Generated CMD:',self::_getCMD(),self::_getCMD()!='' ? self::CL_GREEN : self::CL_RED);
-		self::section_inspect('Executable MD5:',md5_file(self::_getCMD()));
+		self::section_inspect('Executable MD5:',$fex ? md5_file(self::_getCMD()) : 'File Not Found',$fex ? self::CL_GREEN : self::CL_RED);
 		self::section_inspect('Executable:',$exe ? 'Yes' : 'No',$exe ? self::CL_GREEN : self::CL_RED);
 		self::section_inspect('Base path: ',$GLOBALS['WKPDF_BASE_PATH']);
 		self::section_inspect('Site path: ',$GLOBALS['WKPDF_BASE_SITE']);
 		self::section_inspect('WinI path: ',$GLOBALS['WKPDF_WINI_PATH']);
+		self::section_inspect('PHP Script CWD: ',getcwd(),getcwd()!==false ? self::CL_GREEN : self::CL_RED);
+		self::section_inspect('PHP Exec CWD: ',$ecd=='' ? 'fail' : $ecd,$ecd!='' ? self::CL_GREEN : self::CL_RED);
 		self::section_inspect('PHP Version: ',phpversion());
 		self::section_inspect('Safe Mode: ',ini_get('safe_mode') ? 'On' : 'Off',ini_get('safe_mode') ? self::CL_RED : self::CL_GREEN);
 		self::section_inspect('Wkhtmltopdf Version: ',$pev ? $pev : 'Not Recognized',$pev ? self::CL_GREEN : self::CL_RED);
@@ -122,6 +142,7 @@ class WKPDF_DBG extends WKPDF { // debugger class extends WKPDF class to gain ac
 		self::section_begin('Test Run');
 		try {
 			$pdf=new self();
+			self::section_inspect('CMD: ',$pdf->cmd);
 			$pdf->set_url('http://google.com/');
 			$pdf->render();
 			self::section_inspect('Status: ','success',self::CL_GREEN);

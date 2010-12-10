@@ -3,8 +3,6 @@
 	// Automated configuration. Modify these if they fail. (they shouldn't ;) )
 	$GLOBALS['WKPDF_BASE_PATH']=str_replace(str_replace('\\','/',getcwd().'/'),'',dirname(str_replace('\\','/',__FILE__))).'/';
 	$GLOBALS['WKPDF_BASE_SITE']='http://'.$_SERVER['SERVER_NAME'].'/';
-	$GLOBALS['WKPDF_WINI_PATH']=''; // hope and wish that command line works, the other method with absolute path causes path space issues
-								//substr($_SERVER['SystemRoot'],0,strpos($_SERVER['SystemRoot'],'\\')).'\\Program Files\\wkhtmltopdf\\';
 
 	/**
 	 * @author Christian Sciberras
@@ -26,6 +24,7 @@
 	 *   <font color="#008800"><i>// Output PDF. The file name is suggested to the browser.</i></font><br>
 	 *   <font color="#EE00EE">$pdf</font>-><font color="#0000FF">output</font>(<b>WKPDF</b>::<font color="#EE00EE">$PDF_EMBEDDED</font>,<font color="#FF0000">'sample.pdf'</font>);<br>
 	 * @version
+	 *   0.6 Anand, Chris - Added support for custom arguments (the functions args_add, args_remove and args_clear).
 	 *   0.5 Pat Brooks - Identifying certain return error codes.
 	 *   0.4 Adam, Pierino, Chris - Protected fields, IP instead domain, pages from multiple sources.<br>
 	 *   0.3 Chris - CPU and CPU vendor detection to suggest proper executable.<br>
@@ -51,6 +50,7 @@
 		protected $copies=1;
 		protected $grayscale=false;
 		protected $title='';
+		protected $args=array();
 		protected static $_cpu='';
 		protected static $_os='';
 		protected static $_cmd='';
@@ -61,7 +61,8 @@
 		 * @return array An array of execution data; stdout, stderr and return "error" code.
 		 */
 		protected static function _pipeExec($cmd,$input=''){
-			$proc=proc_open($cmd,array(0=>array('pipe','r'),1=>array('pipe','w'),2=>array('pipe','w')),$pipes);
+			$proc=@proc_open($cmd,array(0=>array('pipe','r'),1=>array('pipe','w'),2=>array('pipe','w')),$pipes,null,null,array('suppress_errors'=>true));
+			if(!$proc)return array('stdout'=>'','stderr'=>'CreateProcess failed.','return'=>1);
 			fwrite($pipes[0],$input);
 			fclose($pipes[0]);
 			$stdout=stream_get_contents($pipes[1]); // max execusion time exceeded issue
@@ -99,7 +100,7 @@
 // TODO: use uname -m or -a, by the way, this is about 32bit vs 64bit not amd vs intel!
 						if(`grep -i amd /proc/cpuinfo`!='')			self::$_cpu='amd';
 						elseif(`grep -i intel /proc/cpuinfo`!='')	self::$_cpu='intel';
-						self::$_cpu='amd';break;
+						break;
 					case 'osx':
 // TODO: use uname -m or -a
 						if(`machine | grep -i ppc`!='')				self::$_cpu='ppc';
@@ -107,7 +108,9 @@
 						elseif(`machine | grep -i i`!='')			self::$_cpu='intel';
 						break;
 					case 'win':
-						self::$_cpu='';
+						$cpu=strtolower(getenv('PROCESSOR_IDENTIFIER'));
+						if(strpos($cpu,'intel')!==false)self::$_cpu='intel';
+						if(strpos($cpu,'amd')!==false)self::$_cpu='amd';
 						break;
 					default:
 						throw new Exception('WKPDF CPU detection on '.self::_getOS().' OS not supported.');
@@ -123,13 +126,9 @@
 		 */
 		protected static function _getCMD(){
 			if(self::$_cmd==''){
-				// the end filename is in the form of "(%PATH%)wkhtmltopdf[-(win|osx|lin)-(amd|intel|ppc)][.exe]"
-				if(self::_getOS()=='win'){
-					//self::$_cmd=$GLOBALS['WKPDF_WINI_PATH'].'wkhtmltopdf-'.self::_getOS().'-'.self::_getCPU().'.exe';
-					self::$_cmd=$GLOBALS['WKPDF_WINI_PATH'].'wkhtmltopdf.exe';
-				}else{
-					self::$_cmd=$GLOBALS['WKPDF_BASE_PATH'].'wkhtmltopdf-'.self::_getOS().'-'.self::_getCPU();
-				}
+				// the end filename is in the form of "(%PATH%)wkhtmltopdf[-(win|osx|lin)-(amd64|i386|ppc)][.exe]"
+				self::$_cmd=$GLOBALS['WKPDF_BASE_PATH'];
+				self::$_cmd.=self::_getOS()=='win' ? 'wkhtmltopdf.exe' : 'wkhtmltopdf-'.self::_getOS().'-'.self::_getCPU();
 			}
 			switch(self::_getOS()){
 				case 'win': // checks file existence (permissions on windows isn't much of a problem)
@@ -143,7 +142,7 @@
 					if(count($exists)>1) // "test" command ran, keep testing settings, otherwise just ignore tests...
 						if(strstr($exists[0],'rwxrwxrwx')===false)
 							if(($exists[2]!=get_current_user())||($exists[3]!=get_current_user()))
-								throw new Exception('WKPDF executable permissions are not 0777 and user/group does not match with current user.');
+								throw new Exception('WKPDF executable permissions are not 0777 or user/group does not match with current user/group.');
 					break;
 			}
 			return self::$_cmd;
@@ -273,11 +272,42 @@
 		 * @param array $out The output.
 		 */
 		protected static function _retError($msg,$out){
-			throw new Exception($msg.'<table>'
+			/*throw new Exception*/ die($msg.'<table>' // changed from exception to die due to stack frame error
 				.'<tr><td>RESULT:</td><td><code>'.htmlspecialchars($out['return'],ENT_QUOTES).'</code></td></tr>'
 				.'<tr><td>STDERR:</td><td><code>'.htmlspecialchars($out['stderr'],ENT_QUOTES).'</code></td></tr>'
 				.'<tr><td>STDOUT:</td><td><code>'.htmlspecialchars($out['stdout'],ENT_QUOTES).'</code></td></tr>'
 				.'</table>');
+		}
+		/**
+		 * Add custom argument to the list.
+		 * @param string $switch Argument name (eg: --header).
+		 * @param string $value Argument value (eg: <b>hi</b>).
+		 */
+		public function args_add($switch,$value){
+			$this->args[$switch]=$value;
+		}
+		/**
+		 * Remove an existing custom argument.
+		 * @param string $switch Argument name (eg: --header).
+		 */
+		public function args_remove($switch){
+			if(isset($this->args[$switch]))unset($this->args[$switch]);
+		}
+		/**
+		 * Removes all custom arguments.
+		 */
+		public function args_clear(){
+			$this->args[$switch]=array();
+		}
+		/**
+		 * Helper function that builds the list of arguments.<br>
+		 * Do not call this directly.
+		 * @return string List of custom arguments.
+		 */
+		protected function args_build(){
+			$res='';
+			foreach($this->args as $switch=>$value)$res.=' '.$switch.' '.escapeshellarg($value);
+			return $res;
 		}
 		/**
 		 * Convert HTML to PDF.
@@ -285,16 +315,16 @@
 		 */
 		public function render(){
 			$this->pdf=self::_pipeExec(
-				$this->cmd
+				(self::_getOS()!='win' ? $this->cmd : 'cd '.escapeshellarg(dirname($this->cmd)).' && '.basename($this->cmd))
 				.(($this->copies>1)?' --copies '.(int)$this->copies:'')				// number of copies
 				.' --orientation '.escapeshellarg($this->orient)					// orientation
 				.' --page-size '.escapeshellarg($this->size)						// page size
 				.($this->toc?' --toc':'')											// table of contents
 				.($this->grayscale?' --grayscale':'')								// grayscale
 				.(($this->title!='')?' --title '.escapeshellarg($this->title):'')	// title
+				.$this->args_build()												// custom arguments
 				.' '.escapeshellarg($this->url).' -'								// URL and use STDOUT
-			);
-			if(strpos(strtolower($this->pdf['stderr']),'error')!==false)self::_retError('WKPDF system error.',$this->pdf);
+			);			//if(strpos(strtolower($this->pdf['stderr']),'error')!==false)self::_retError('WKPDF system error.',$this->pdf);
 			if($this->pdf['stdout']=='')self::_retError('WKPDF program error.',$this->pdf);
 			$this->status=$this->pdf['stderr'];
 			$this->pdf=$this->pdf['stdout'];
@@ -389,13 +419,13 @@
 		/**
 		 * This function doesn't make sense in this context.
 		 */
-		public function set_html(){
+		public function set_html($html){
 			die('Calling set_html() not allowed for WKPDF_MULTI class.');
 		}
 		/**
 		 * This function doesn't make sense in this context.
 		 */
-		public function set_url(){
+		public function set_url($url){
 			die('Calling set_url() not allowed for WKPDF_MULTI class.');
 		}
 		/**
@@ -442,7 +472,6 @@
 				.(($this->title!='')?' --title "'.$this->title.'"':'')			// title
 				.' '.$urls.' -'													// URL and use STDOUT
 			);
-			if(strpos(strtolower($this->pdf['stderr']),'error')!==false)self::_retError('WKPDF system error.',$this->pdf);
 			if($this->pdf['stdout']=='')self::_retError('WKPDF program error.',$this->pdf);
 			if(((int)$this->pdf['return'])>1)self::_retError('WKPDF shell error.',$this->pdf);
 			$this->status=$this->pdf['stderr'];
